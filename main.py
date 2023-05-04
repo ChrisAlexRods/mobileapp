@@ -1,35 +1,22 @@
+import random
+from datetime import datetime, timedelta
+from kivy.animation import Animation
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.label import Label
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.uix.progressbar import ProgressBar
-from kivy.animation import Animation
-from kivy.core.window import Window
-from kivy.graphics import Color, Rectangle
-from challenges import challenges, generate_challenge
-
-Window.clearcolor = (0.2, 0.2, 0.2, 1)  # Set the background color to a darker shade
-
-class Character:
-    def __init__(self, level=1, xp=0):
-        self.level = level
-        self.xp = xp
-
-    def gain_xp(self, xp_earned):
-        self.xp += xp_earned
-        self.check_level_up()
-
-    def check_level_up(self):
-        xp_needed = self.calculate_xp_needed()
-        if self.xp >= xp_needed:
-            self.level += 1
-            self.xp -= xp_needed
-
-    def calculate_xp_needed(self):
-        return (self.level * 100) + ((self.level - 1) * 50)
+from kivy.clock import Clock
+from character import Character
+from challenges import generate_challenge, challenges
+from kivy.uix.gridlayout import GridLayout
 
 class SelfImprovementApp(App):
     def build(self):
+        self.challenges = []
+        self.last_generated = datetime.now() - timedelta(minutes=30)
+        self.generate_challenges()
+
         self.character = Character()
 
         layout = BoxLayout(orientation='vertical', padding=[20, 20, 20, 20], spacing=10)
@@ -52,10 +39,22 @@ class SelfImprovementApp(App):
 
         self.update_challenge()
 
+        self.choices_layout = GridLayout(cols=2, spacing=10, size_hint_y=None, height=100)
+        for idx, challenge in enumerate(self.challenges):
+            choice_button = Button(text=f"Choice {idx + 1}", size_hint_y=None, height=50)
+            choice_button.bind(on_press=lambda instance, c=challenge: self.select_challenge(instance, c))
+            self.choices_layout.add_widget(choice_button)
+        layout.add_widget(self.choices_layout)
+
         return layout
 
+    def generate_challenges(self):
+        if datetime.now() - self.last_generated >= timedelta(minutes=30):
+            self.challenges = random.sample(challenges, 4)
+            self.last_generated = datetime.now()
+
     def update_challenge(self):
-        self.current_challenge = generate_challenge(self.character.level, challenges)
+        self.current_challenge = generate_challenge(self.character.level, self.challenges)
         self.challenge_label.text = f"Challenge: {self.current_challenge['title']}"
 
     def complete_challenge(self, instance):
@@ -66,11 +65,35 @@ class SelfImprovementApp(App):
         self.xp_bar.value = self.character.xp
 
         self.animate_complete_button(instance)
+
+        # Remove the completed challenge from the list
+        self.challenges.remove(self.current_challenge)
+
+        # Add a new challenge to the list
+        new_challenge = generate_challenge(self.character.level, challenges)
+        while new_challenge in self.challenges:
+            new_challenge = generate_challenge(self.character.level, challenges)
+        self.challenges.append(new_challenge)
+
+        # Update the choices_layout
+        self.choices_layout.clear_widgets()
+        for idx, challenge in enumerate(self.challenges):
+            choice_button = Button(text=f"Choice {idx + 1}", size_hint_y=None, height=50)
+            choice_button.bind(on_press=lambda instance, c=challenge: self.select_challenge(instance, c))
+            self.choices_layout.add_widget(choice_button)
+
         self.update_challenge()
+
 
     def animate_complete_button(self, instance):
         animation = Animation(background_color=(0.5, 0.5, 0.5, 1), duration=0.2) + Animation(background_color=(1, 1, 1, 1), duration=0.2)
         animation.start(instance)
 
+    def select_challenge(self, instance, challenge):
+        self.current_challenge = challenge
+        self.challenge_label.text = f"Challenge: {self.current_challenge['title']}"
+
 if __name__ == '__main__':
     SelfImprovementApp().run()
+
+# ... Remaining code
