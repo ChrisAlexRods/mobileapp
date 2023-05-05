@@ -10,9 +10,11 @@ from kivy.clock import Clock
 from character import Character
 from challenges import generate_challenge, challenges
 from kivy.uix.gridlayout import GridLayout
+from kivy.core.window import Window
 
 class SelfImprovementApp(App):
     def build(self):
+        Window.clearcolor = (0.2, 0.2, 0.2, 1)  # Change the background color
         self.challenges = []
         self.last_generated = datetime.now() - timedelta(minutes=30)
         self.generate_challenges()
@@ -21,23 +23,33 @@ class SelfImprovementApp(App):
 
         layout = BoxLayout(orientation='vertical', padding=[20, 20, 20, 20], spacing=10)
 
-        self.level_label = Label(text=f"Level: {self.character.level}", font_size=20, halign="left", valign="middle")
+        self.level_label = Label(text=f"Level: {self.character.level}", font_size=20, halign="left", valign="middle", color=(1, 1, 1, 1))
         layout.add_widget(self.level_label)
 
-        self.xp_label = Label(text=f"XP: {self.character.xp}", font_size=20, halign="left", valign="middle")
+        self.xp_label = Label(text=f"XP: {self.character.xp}", font_size=20, halign="left", valign="middle", color=(1, 1, 1, 1))
         layout.add_widget(self.xp_label)
 
         self.xp_bar = ProgressBar(max=self.character.calculate_xp_needed(), value=self.character.xp, size_hint_y=None, height=20)
         layout.add_widget(self.xp_bar)
 
-        self.challenge_label = Label(text="Challenge: ", font_size=18, halign="left", valign="middle", size_hint_y=None, height=50)
+        self.challenge_label = Label(text="Challenge: ", font_size=18, halign="left", valign="middle", size_hint_y=None, height=50, color=(1, 1, 1, 1))
         layout.add_widget(self.challenge_label)
 
-        complete_button = Button(text='Complete', size_hint_y=None, height=50)
+        complete_button = Button(text='Complete', size_hint_y=None, height=50, background_color=(0, 0.7, 0.8, 1), font_size=18, color=(1, 1, 1, 1))
         complete_button.bind(on_press=self.complete_challenge)
         layout.add_widget(complete_button)
 
+        # Create a new GridLayout for challenge choices
+        self.choices_layout = GridLayout(cols=2, size_hint_y=None, height=200)
+        for idx, challenge in enumerate(self.challenges):
+            choice_button = Button(text=f"Choice {idx + 1}", size_hint_y=None, height=50, background_color=(0, 0.7, 0.8, 1), font_size=18, color=(1, 1, 1, 1))
+            choice_button.bind(on_press=lambda instance, c=challenge: self.select_challenge(instance, c))
+            self.choices_layout.add_widget(choice_button)
+        layout.add_widget(self.choices_layout)
+
         self.update_challenge()
+
+        return layout
 
         self.choices_layout = GridLayout(cols=2, spacing=10, size_hint_y=None, height=100)
         for idx, challenge in enumerate(self.challenges):
