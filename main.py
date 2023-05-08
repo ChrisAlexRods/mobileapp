@@ -1,101 +1,84 @@
-import random
-from datetime import datetime, timedelta
-from kivy.animation import Animation
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.progressbar import ProgressBar
-from kivy.clock import Clock
-from character import Character
-from challenges import generate_challenge, challenges
+from kivy.graphics import Color, RoundedRectangle
 from kivy.uix.gridlayout import GridLayout
 from kivy.core.window import Window
-from kivy3 import Scene, Renderer, PerspectiveCamera
-from kivy3.loaders import OBJLoader
-from kivy.uix.floatlayout import FloatLayout
-import math
+from kivy.uix.scrollview import ScrollView
+from kivy.properties import ObjectProperty
 
+from datetime import datetime, timedelta
+from character import Character
+import random
+from challenges import generate_challenge, generate_challenges
 
-def create_3d_heart(self):
-    # Set up the 3D scene
-    scene = Scene(background_color=(1, 1, 1, 1))
-    camera = PerspectiveCamera(pos=(0, 0, 5), up=(0, 1, 0), fov=75)
-    renderer = Renderer(scene=scene, camera=camera, size_hint=(1, 1))
-    renderer.set_clear_color((1, 1, 1, 1))
-
-    # Load the 3D heart model (in OBJ format)
-    loader = OBJLoader()
-    heart = loader.load("path/to/heart.obj")
-    heart.pos.z = -3
-    scene.add(heart)
-
-    # Add ambient light
-    ambient_light = AmbientLight(color=(0.3, 0.3, 0.3))
-    scene.add(ambient_light)
-
-    # Add point light
-    point_light = PointLight(color=(1, 1, 1), pos=(3, 3, 3))
-    scene.add(point_light)
-
-    # Rotate and scale animation
-    def animate_heart(dt):
-        heart.rotation.y += 1
-        heart.rotation.z += 1
-        heart.scale.x = 1 + 0.1 * math.sin(2 * math.pi * dt)
-        heart.scale.y = 1 + 0.1 * math.sin(2 * math.pi * dt)
-        heart.scale.z = 1 + 0.1 * math.sin(2 * math.pi * dt)
-
-    Clock.schedule_interval(animate_heart, 1 / 60)
-
-    return renderer
 
 
 class SelfImprovementApp(App):
     def build(self):
-        Window.clearcolor = (1, 1, 1, 1)  # Change the background color to white
+        Window.clearcolor = (0.95, 0.95, 0.95, 1)  # Change the background color to off-white
         self.challenges = []
         self.last_generated = datetime.now() - timedelta(minutes=30)
-        self.generate_challenges()
 
-        self.character = Character()
+        self.character = Character()  # Initialize the character attribute before generating challenges
+
+        self.challenges = generate_challenges(self.character.level, self.challenges)
 
         layout = BoxLayout(orientation='vertical', padding=[20, 20, 20, 20], spacing=10)
 
-        self.level_label = Label(text=f"Level: {self.character.level}", font_size=20, halign="left", valign="middle", color=(1, 1, 1, 1))
+        self.level_label = Label(text=f"Level: {self.character.level}", font_size=20, halign="left", valign="middle", color=(0, 0, 0, 1))
         layout.add_widget(self.level_label)
 
-        self.xp_label = Label(text=f"XP: {self.character.xp}", font_size=20, halign="left", valign="middle", color=(1, 1, 1, 1))
+        self.xp_label = Label(text=f"XP: {self.character.xp}", font_size=20, halign="left", valign="middle", color=(0, 0, 0, 1))
         layout.add_widget(self.xp_label)
 
-        self.xp_bar = ProgressBar(max=self.character.calculate_xp_needed(), value=self.character.xp, size_hint_y=None, height=20)
+        self.xp_bar = ProgressBar(max=self.character.calculate_xp_needed(), value=self.character.xp)
         layout.add_widget(self.xp_bar)
 
-        self.challenge_label = Label(text="Challenge: ", font_size=18, halign="left", valign="middle", size_hint_y=None, height=50, color=(1, 1, 1, 1))
+        self.challenge_label = Label(text="Challenge: ", font_size=18, halign="left", valign="middle", size_hint_y=None, height=50, color=(0, 0, 0, 1))
         layout.add_widget(self.challenge_label)
 
-        complete_button = Button(text='Complete', size_hint_y=None, height=50, background_color=(0, 0.7, 0.8, 1), font_size=18, color=(1, 1, 1, 1))
+        # ... (keep the rest of the code the same) ...
+
+
+        complete_button = Button(text='Complete', size_hint_y=None, height=50, background_color=(0.8, 0.8, 0.8, 1), font_size=18, color=(0, 0, 0, 1))
         complete_button.bind(on_press=self.complete_challenge)
         layout.add_widget(complete_button)
 
         # Create a new GridLayout for challenge choices
-        self.choices_layout = GridLayout(cols=2, spacing=20, size_hint_y=None, height=200)
+        self.choices_layout = GridLayout(cols=1, spacing=20, size_hint_y=None)
         for idx, challenge in enumerate(self.challenges):
-            choice_button = Button(text=f"Choice {idx + 1}", size_hint_y=None, height=50, background_color=(0, 0.7, 0.8, 1), font_size=18, color=(1, 1, 1, 1))
+            choice_button = Button(text=f"Choice {idx + 1}", size_hint_y=None, height=80, font_size=18, color=(0, 0, 0, 1), background_color=(0, 0, 0, 0))
+
+            with choice_button.canvas.before:
+                Color(0.8, 0.8, 0.8, 1)
+                RoundedRectangle(size=choice_button.size, pos=choice_button.pos, radius=[10])
+                choice_button.bind(size=self.update_rect, pos=self.update_rect)
+
             choice_button.bind(on_press=lambda instance, c=challenge: self.select_challenge(instance, c))
             self.choices_layout.add_widget(choice_button)
-        layout.add_widget(self.choices_layout)
 
-        self.update_challenge()
-        heart_renderer = self.create_3d_heart()
-        layout.add_widget(heart_renderer)
+        # Add a ScrollView to wrap the GridLayout
+        scroll_view = ScrollView(size_hint=(1, None), size=(Window.width, Window.height * 0.5), bar_inactive_color=(0.7, 0.7, 0.7, 0.9))
+        scroll_view.add_widget(self.choices_layout)
+        layout.add_widget(scroll_view)
 
         return layout
 
-    def generate_challenges(self):
-        if datetime.now() - self.last_generated >= timedelta(minutes=30):
-            self.challenges = random.sample(challenges, 4)
-            self.last_generated = datetime.now()
+    # ... (keep the rest of the code the same) ...
+
+
+
+
+    def update_rect(self, instance, value):
+        instance.canvas.before.clear()
+        with instance.canvas.before:
+            Color(0.8, 0.8, 0.8, 1)
+            RoundedRectangle(size=instance.size, pos=instance.pos, radius=[10])
+
+        self.update_challenge()
 
     def update_challenge(self):
         self.current_challenge = generate_challenge(self.character.level, self.challenges)
@@ -139,5 +122,3 @@ class SelfImprovementApp(App):
 
 if __name__ == '__main__':
     SelfImprovementApp().run()
-
-# ... Remaining code

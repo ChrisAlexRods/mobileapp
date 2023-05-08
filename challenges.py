@@ -333,6 +333,28 @@ challenges = [
     },
 ]
 
-def generate_challenge(character_level, challenges):
-    relevant_challenges = [c for c in challenges if c['level'] <= character_level]
+# ... (other code and the challenges list definition)
+
+def generate_challenge(level, challenges):
+    relevant_challenges = [challenge for challenge in challenges if challenge['level'] <= level]
+
+    # If there are no relevant challenges, return a default challenge
+    if not relevant_challenges:
+        return {
+            'level': 1,
+            'title': 'Default Challenge',
+            'description': 'This is a default challenge when no other challenges are available.',
+            'xp': 10
+        }
+
     return random.choice(relevant_challenges)
+
+def generate_challenges(level, all_challenges, num_challenges=5):
+    relevant_challenges = [challenge for challenge in all_challenges if challenge['level'] <= level]
+
+    # Sample the minimum number of elements between num_challenges and the length of the relevant_challenges list
+    selected_challenges = random.sample(relevant_challenges, min(num_challenges, len(relevant_challenges)))
+
+    return selected_challenges
+
+# ... (other code if any)
