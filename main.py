@@ -8,23 +8,22 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
 from kivy.properties import ObjectProperty
+from kivy.animation import Animation
 
 from datetime import datetime, timedelta
 from character import Character
 import random
-from challenges import generate_challenge, generate_challenges
-
-
+from challenges import generate_challenge, generate_challenges, challenges  # Import challenges list
 
 class SelfImprovementApp(App):
     def build(self):
-        Window.clearcolor = (0.95, 0.95, 0.95, 1)  # Change the background color to off-white
+        Window.clearcolor = (0.95, 0.95, 0.95, 1)
         self.challenges = []
         self.last_generated = datetime.now() - timedelta(minutes=30)
 
-        self.character = Character()  # Initialize the character attribute before generating challenges
+        self.character = Character()
 
-        self.challenges = generate_challenges(self.character.level, self.challenges)
+        self.challenges = generate_challenges(self.character.level, challenges)  # Pass the challenges list
 
         layout = BoxLayout(orientation='vertical', padding=[20, 20, 20, 20], spacing=10)
 
@@ -41,7 +40,6 @@ class SelfImprovementApp(App):
         layout.add_widget(self.challenge_label)
 
         # ... (keep the rest of the code the same) ...
-
 
         complete_button = Button(text='Complete', size_hint_y=None, height=50, background_color=(0.8, 0.8, 0.8, 1), font_size=18, color=(0, 0, 0, 1))
         complete_button.bind(on_press=self.complete_challenge)
@@ -61,16 +59,13 @@ class SelfImprovementApp(App):
             self.choices_layout.add_widget(choice_button)
 
         # Add a ScrollView to wrap the GridLayout
+        scroll_view = ScrollView(size_hint=(1, None), size=(Window.width, Window.height * 0.5), bar_inactive_color=(0.7, 0.7, 0.7,))
+                # Add a ScrollView to wrap the GridLayout
         scroll_view = ScrollView(size_hint=(1, None), size=(Window.width, Window.height * 0.5), bar_inactive_color=(0.7, 0.7, 0.7, 0.9))
         scroll_view.add_widget(self.choices_layout)
         layout.add_widget(scroll_view)
 
         return layout
-
-    # ... (keep the rest of the code the same) ...
-
-
-
 
     def update_rect(self, instance, value):
         instance.canvas.before.clear()
@@ -110,7 +105,6 @@ class SelfImprovementApp(App):
             self.choices_layout.add_widget(choice_button)
 
         self.update_challenge()
-
 
     def animate_complete_button(self, instance):
         animation = Animation(background_color=(0.5, 0.5, 0.5, 1), duration=0.2) + Animation(background_color=(1, 1, 1, 1), duration=0.2)
