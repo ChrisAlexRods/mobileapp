@@ -9,6 +9,8 @@ from kivy.core.window import Window
 from kivy.uix.scrollview import ScrollView
 from kivy.properties import ObjectProperty
 from kivy.animation import Animation
+from kivy.graphics import Rectangle
+from kivy.clock import Clock
 
 from datetime import datetime, timedelta
 from character import Character
@@ -39,7 +41,6 @@ class SelfImprovementApp(App):
         self.challenge_label = Label(text="Challenge: ", font_size=18, halign="left", valign="middle", size_hint_y=None, height=50, color=(0, 0, 0, 1))
         layout.add_widget(self.challenge_label)
 
-        # ... (keep the rest of the code the same) ...
 
         complete_button = Button(text='Complete', size_hint_y=None, height=50, background_color=(0.8, 0.8, 0.8, 1), font_size=18, color=(0, 0, 0, 1))
         complete_button.bind(on_press=self.complete_challenge)
@@ -107,8 +108,13 @@ class SelfImprovementApp(App):
         self.update_challenge()
 
     def animate_complete_button(self, instance):
-        animation = Animation(background_color=(0.5, 0.5, 0.5, 1), duration=0.2) + Animation(background_color=(1, 1, 1, 1), duration=0.2)
-        animation.start(instance)
+        animation_color_1 = Animation(background_color=(0.5, 0, 0.5, 1), duration=0.2)
+        animation_color_2 = Animation(background_color=(0, 0.5, 0.5, 1), duration=0.2)
+        animation_color_3 = Animation(background_color=(0.5, 0.5, 0, 1), duration=0.2)
+        animation_reset = Animation(background_color=(0.8, 0.8, 0.8, 1), duration=0.2)
+
+        animation_sequence = animation_color_1 + animation_color_2 + animation_color_3 + animation_reset
+        animation_sequence.start(instance)
 
     def select_challenge(self, instance, challenge):
         self.current_challenge = challenge
