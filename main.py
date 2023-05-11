@@ -11,11 +11,17 @@ from kivy.properties import ObjectProperty
 from kivy.animation import Animation
 from kivy.graphics import Rectangle
 from kivy.clock import Clock
-
+from kivy.uix.floatlayout import FloatLayout
+from kivy.graphics import Line
+from kivy.graphics import Ellipse
 from datetime import datetime, timedelta
 from character import Character
 import random
 from challenges import generate_challenge, generate_challenges, challenges  # Import challenges list
+from kivy.animation import Animation
+from kivy.graphics import Ellipse
+from kivy.uix.widget import Widget
+from random import randint
 
 class SelfImprovementApp(App):
     def build(self):
@@ -66,6 +72,8 @@ class SelfImprovementApp(App):
         scroll_view.add_widget(self.choices_layout)
         layout.add_widget(scroll_view)
 
+        self.animation_layout = FloatLayout(size_hint=(1, 1), pos_hint={"top": 1})
+        layout.add_widget(self.animation_layout)
         return layout
 
     def update_rect(self, instance, value):
@@ -101,11 +109,41 @@ class SelfImprovementApp(App):
         # Update the choices_layout
         self.choices_layout.clear_widgets()
         for idx, challenge in enumerate(self.challenges):
-            choice_button = Button(text=f"Choice {idx + 1}", size_hint_y=None, height=50)
+            choice_button = Button(text=f"Choice {idx + 1}", size_hint_y=None, height=80, font_size=18, color=(0, 0, 0, 1), background_color=(0, 0, 0, 0))
+
+            with choice_button.canvas.before:
+                Color(0.8, 0.8, 0.8, 1)
+                RoundedRectangle(size=choice_button.size, pos=choice_button.pos, radius=[10])
+                choice_button.bind(size=self.update_rect, pos=self.update_rect)
+
             choice_button.bind(on_press=lambda instance, c=challenge: self.select_challenge(instance, c))
             self.choices_layout.add_widget(choice_button)
 
         self.update_challenge()
+
+    def create_stimulating_animation(self):
+        self.animation_layout.canvas.clear()
+        with self.animation_layout.canvas:
+            for _ in range(5):
+                Color(random.random(), random.random(), random.random(), 1)
+                shape = random.choice(["rectangle", "ellipse", "line"])
+                x, y = random.random() * Window.width, random.random() * Window.height
+                w, h = random.random() * 100 + 50, random.random() * 100 + 50
+
+                if shape == "rectangle":
+                    RoundedRectangle(pos=(x, y), size=(w, h), radius=[10])
+                elif shape == "ellipse":
+                    Ellipse(pos=(x, y), size=(w, h))
+                else:
+                    Line(points=[x, y, x + w, y + h], width=2)
+
+        anim = Animation(duration=1)
+
+        def clear_canvas(*args):
+            self.animation_layout.canvas.clear()
+
+        anim.bind(on_complete=clear_canvas)
+        anim.start(self.animation_layout)
 
     def animate_complete_button(self, instance):
         animation_color_1 = Animation(background_color=(0.5, 0, 0.5, 1), duration=0.2)
@@ -115,6 +153,7 @@ class SelfImprovementApp(App):
 
         animation_sequence = animation_color_1 + animation_color_2 + animation_color_3 + animation_reset
         animation_sequence.start(instance)
+        self.create_stimulating_animation()
 
     def select_challenge(self, instance, challenge):
         self.current_challenge = challenge
