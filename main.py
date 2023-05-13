@@ -22,9 +22,25 @@ from kivy.animation import Animation
 from kivy.graphics import Ellipse
 from kivy.uix.widget import Widget
 from random import randint
+from login import LoginScreen
+from signup import SignupScreen
+from kivy.uix.screenmanager import ScreenManager, Screen
 
 class SelfImprovementApp(App):
     def build(self):
+        self.sm = ScreenManager()
+
+        # Login Screen
+        login_screen = LoginScreen(name='login')
+        self.sm.add_widget(login_screen)
+
+        # Signup Screen
+        signup_screen = SignupScreen(name='signup')
+        self.sm.add_widget(signup_screen)
+
+        # Main Game Screen
+        main_game_screen = Screen(name='main')
+
         Window.clearcolor = (0.95, 0.95, 0.95, 1)
         self.challenges = []
         self.last_generated = datetime.now() - timedelta(minutes=30)
@@ -47,10 +63,10 @@ class SelfImprovementApp(App):
         self.challenge_label = Label(text="Challenge: ", font_size=18, halign="left", valign="middle", size_hint_y=None, height=50, color=(0, 0, 0, 1))
         layout.add_widget(self.challenge_label)
 
-
         complete_button = Button(text='Complete', size_hint_y=None, height=50, background_color=(0.8, 0.8, 0.8, 1), font_size=18, color=(0, 0, 0, 1))
         complete_button.bind(on_press=self.complete_challenge)
         layout.add_widget(complete_button)
+
 
         # Create a new GridLayout for challenge choices
         self.choices_layout = GridLayout(cols=1, spacing=20, size_hint_y=None)
@@ -66,15 +82,17 @@ class SelfImprovementApp(App):
             self.choices_layout.add_widget(choice_button)
 
         # Add a ScrollView to wrap the GridLayout
-        scroll_view = ScrollView(size_hint=(1, None), size=(Window.width, Window.height * 0.5), bar_inactive_color=(0.7, 0.7, 0.7,))
-                # Add a ScrollView to wrap the GridLayout
         scroll_view = ScrollView(size_hint=(1, None), size=(Window.width, Window.height * 0.5), bar_inactive_color=(0.7, 0.7, 0.7, 0.9))
         scroll_view.add_widget(self.choices_layout)
         layout.add_widget(scroll_view)
 
         self.animation_layout = FloatLayout(size_hint=(1, 1), pos_hint={"top": 1})
         layout.add_widget(self.animation_layout)
-        return layout
+
+        main_game_screen.add_widget(layout)
+        self.sm.add_widget(main_game_screen)
+
+        return self.sm
 
     def update_rect(self, instance, value):
         instance.canvas.before.clear()
